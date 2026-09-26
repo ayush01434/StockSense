@@ -1,0 +1,41 @@
+# Dependencies
+/node_modules
+/.pnpm-store
+.pnpm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Next.js Build Output
+/.next/
+/out/
+/build
+/dist
+
+# Environment & Local Secrets (Kabhi push nahi hone chahiye)
+.env
+.env*.local
+.env.production
+.env.staging
+
+# Python / FastAPI (Backend)
+__pycache__/
+*.py[cod]
+*$py.class
+venv/
+.venv/
+env/
+.pytest_cache/
+
+# Supabase Local Settings & Logs
+/supabase/.temp/
+.supabase/
+
+# Docker Logs
+*.log
+
+# Operating System & IDE Files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
