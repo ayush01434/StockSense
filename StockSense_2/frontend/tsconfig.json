@@ -1,0 +1,6 @@
+{
+  "compilerOptions": {
+    // baaki pehle ki settings...
+    "types": ["node"]
+  }
+}
