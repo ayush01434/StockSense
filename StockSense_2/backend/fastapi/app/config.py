@@ -3,7 +3,7 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from pydantic import field_validator
+from pydantic import Field, field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -19,7 +19,6 @@ class Settings(BaseSettings):
     app_version: str = "1.0.0"
     environment: str = "development"
     debug: bool = False
-
     api_v1_prefix: str = "/api/v1"
 
     cors_origins: str = "http://localhost:3000"
@@ -29,23 +28,21 @@ class Settings(BaseSettings):
     supabase_publishable_key: str = ""
     supabase_anon_key: str = ""
     supabase_service_role_key: str = ""
-    supabase_timeout_seconds: float = 10.0
+    supabase_timeout_seconds: float = Field(default=10.0, gt=0, le=120)
 
     storage_bucket: str = "avatars"
-
-    default_page_size: int = 20
-    max_page_size: int = 100
-
+    default_page_size: int = Field(default=20, ge=1)
+    max_page_size: int = Field(default=100, ge=1)
     log_level: str = "INFO"
     request_id_header: str = "X-Request-ID"
-
     allow_docs_in_production: bool = False
 
-    @field_validator("default_page_size", "max_page_size")
+    @field_validator("max_page_size")
     @classmethod
-    def validate_page_size(cls, value: int) -> int:
-        if value < 1:
-            raise ValueError("Page size must be greater than zero.")
+    def max_page_size_must_cover_default(cls, value: int, info):
+        default = info.data.get("default_page_size", 20)
+        if value < default:
+            raise ValueError("max_page_size must be >= default_page_size")
         return value
 
     @property
@@ -54,11 +51,7 @@ class Settings(BaseSettings):
 
     @property
     def cors_origin_list(self) -> list[str]:
-        return [
-            origin.strip()
-            for origin in self.cors_origins.split(",")
-            if origin.strip()
-        ]
+        return [x.strip() for x in self.cors_origins.split(",") if x.strip()]
 
     @property
     def docs_url(self) -> str | None:
@@ -73,12 +66,8 @@ class Settings(BaseSettings):
             "app_version": self.app_version,
             "environment": self.environment,
             "debug": self.debug,
-            "supabase_configured": bool(
-                self.supabase_url and self.supabase_key
-            ),
-            "service_role_configured": bool(
-                self.supabase_service_role_key
-            ),
+            "supabase_configured": bool(self.supabase_url and self.supabase_key),
+            "service_role_configured": bool(self.supabase_url and self.supabase_service_role_key),
         }
 
 
