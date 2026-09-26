@@ -1,0 +1,17 @@
+export const ROUTES = {
+  home: "/",
+  dashboard: "/dashboard",
+  products: "/products",
+  inventory: "/inventory",
+  receipts: "/receipts",
+  deliveries: "/deliveries",
+  transfers: "/transfers",
+  adjustments: "/adjustments",
+  ledger: "/ledger",
+  warehouses: "/warehouses",
+  locations: "/locations",
+  suppliers: "/suppliers",
+  alerts: "/alerts",
+  settings: "/settings",
+  profile: "/profile",
+};

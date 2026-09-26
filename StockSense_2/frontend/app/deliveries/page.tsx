@@ -1,65 +1,140 @@
-import AppShell from "../../components/layout/AppShell";
+"use client";
 
-const deliveries = [
-  {
-    reference: "DEL-2031",
-    customer: "Nova Retail",
-    warehouse: "Main Warehouse",
-    date: "26 Sep 2026",
-    status: "Waiting",
-  },
-  {
-    reference: "DEL-2030",
-    customer: "Orbit Stores",
-    warehouse: "Warehouse 2",
-    date: "25 Sep 2026",
-    status: "Ready",
-  },
-  {
-    reference: "DEL-2029",
-    customer: "City Mart",
-    warehouse: "Main Warehouse",
-    date: "24 Sep 2026",
-    status: "Done",
-  },
-];
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import AppShell from "../../components/layout/AppShell";
+import { listResource } from "../../lib/api/resources";
+
+type Delivery = {
+  id: string;
+  reference: string;
+  warehouse_id: string | null;
+  status: string;
+  recipient_name: string | null;
+  notes: string | null;
+  created_at: string;
+};
 
 export default function DeliveriesPage() {
+  const [deliveries, setDeliveries] =
+    useState<Delivery[]>([]);
+
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+
+  useEffect(() => {
+    async function load() {
+      try {
+        const response =
+          await listResource<Delivery>(
+            "deliveries",
+            {
+              page: 1,
+              pageSize: 100,
+            }
+          );
+
+        setDeliveries(response.data);
+      } catch (err) {
+        setError(
+          err instanceof Error
+            ? err.message
+            : "Unable to load deliveries."
+        );
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    void load();
+  }, []);
+
   return (
     <AppShell>
       <div style={headerStyle}>
         <div>
           <h1>Deliveries</h1>
-          <p style={subtitleStyle}>Track outgoing goods and customer shipments.</p>
+
+          <p style={subtitleStyle}>
+            Outgoing stock and customer shipments.
+          </p>
         </div>
 
-        <button style={buttonStyle}>+ New Delivery</button>
+        <Link
+          href="/deliveries/new"
+          style={buttonStyle}
+        >
+          + New Delivery
+        </Link>
       </div>
 
+      {error && <div style={errorStyle}>{error}</div>}
+
       <div style={tableWrapperStyle}>
-        <table style={{ width: "100%", borderCollapse: "collapse" }}>
+        <table
+          style={{
+            width: "100%",
+            borderCollapse: "collapse",
+          }}
+        >
           <thead>
             <tr>
-              {["Reference", "Customer", "Warehouse", "Date", "Status"].map(
-                (heading) => (
-                  <th key={heading} style={headingStyle}>
-                    {heading}
-                  </th>
-                )
-              )}
+              <th style={headingStyle}>Reference</th>
+              <th style={headingStyle}>Recipient</th>
+              <th style={headingStyle}>Warehouse ID</th>
+              <th style={headingStyle}>Status</th>
+              <th style={headingStyle}>Created</th>
             </tr>
           </thead>
 
           <tbody>
-            {deliveries.map((delivery) => (
-              <tr key={delivery.reference}>
-                <td style={cellStyle}>{delivery.reference}</td>
-                <td style={cellStyle}>{delivery.customer}</td>
-                <td style={cellStyle}>{delivery.warehouse}</td>
-                <td style={cellStyle}>{delivery.date}</td>
-                <td style={cellStyle}>{delivery.status}</td>
+            {loading ? (
+              <tr>
+                <td style={cellStyle} colSpan={5}>
+                  Loading deliveries...
+                </td>
               </tr>
-            ))}
+            ) : deliveries.length === 0 ? (
+              <tr>
+                <td style={cellStyle} colSpan={5}>
+                  No deliveries found.
+                </td>
+              </tr>
+            ) : (
+              deliveries.map((delivery) => (
+                <tr key={delivery.id}>
+                  <td style={cellStyle}>
+                    <Link
+                      href={`/deliveries/${delivery.id}`}
+                      style={{
+                        color: "#ef5350",
+                        fontWeight: 600,
+                      }}
+                    >
+                      {delivery.reference}
+                    </Link>
+                  </td>
+
+                  <td style={cellStyle}>
+                    {delivery.recipient_name || "—"}
+                  </td>
+
+                  <td style={cellStyle}>
+                    {delivery.warehouse_id || "—"}
+                  </td>
+
+                  <td style={cellStyle}>
+                    {delivery.status}
+                  </td>
+
+                  <td style={cellStyle}>
+                    {new Date(
+                      delivery.created_at
+                    ).toLocaleDateString()}
+                  </td>
+                </tr>
+              ))
+            )}
           </tbody>
         </table>
       </div>
@@ -81,17 +156,17 @@ const subtitleStyle = {
 
 const buttonStyle = {
   background: "#ef5350",
-  border: "none",
   color: "white",
-  borderRadius: "8px",
   padding: "10px 16px",
+  borderRadius: "8px",
+  textDecoration: "none",
 };
 
 const tableWrapperStyle = {
   background: "#15181d",
   border: "1px solid #2b3038",
   borderRadius: "12px",
-  overflow: "hidden",
+  overflowX: "auto" as const,
 };
 
 const headingStyle = {
@@ -104,4 +179,12 @@ const headingStyle = {
 const cellStyle = {
   padding: "16px",
   borderBottom: "1px solid #2b3038",
+};
+
+const errorStyle = {
+  background: "#3a1d1d",
+  color: "#ff9d9d",
+  padding: "12px",
+  borderRadius: "8px",
+  marginBottom: "16px",
 };
